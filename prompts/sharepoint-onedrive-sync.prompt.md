@@ -269,7 +269,7 @@ await uploadToSharePoint(driveId, 'dashboard-status.json', dashboardStatus, 'log
 
 #### Large Files (> 4MB) - Resumable Upload Session
 ```javascript
-async function uploadLargeFileToSharePoint(driveId, fileName, fileStream, targetFolder = '') {
+async function uploadLargeFileToSharePoint(driveId, fileName, fileBuffer, fileSize, targetFolder = '') {
     // Step 1: Create upload session
     const sessionUrl = targetFolder
         ? `https://graph.microsoft.com/v1.0/drives/${driveId}/root:/${targetFolder}/${fileName}:/createUploadSession`
@@ -293,12 +293,11 @@ async function uploadLargeFileToSharePoint(driveId, fileName, fileStream, target
     
     // Step 2: Upload in chunks (recommended: 5-10 MB per chunk)
     const chunkSize = 5 * 1024 * 1024; // 5 MB
-    const fileSize = fileStream.length;
     let bytesUploaded = 0;
     
     while (bytesUploaded < fileSize) {
         const chunkEnd = Math.min(bytesUploaded + chunkSize, fileSize);
-        const chunk = fileStream.slice(bytesUploaded, chunkEnd);
+        const chunk = fileBuffer.slice(bytesUploaded, chunkEnd);
         
         const chunkResponse = await fetch(uploadUrl, {
             method: 'PUT',
@@ -338,8 +337,9 @@ async function uploadToOneDrive(fileName, fileContent, targetFolder = '') {
     return await uploadToSharePoint(driveId, fileName, fileContent, targetFolder);
 }
 
-// Example: Upload log file
-const logContent = fs.readFileSync('/app/logs/carpuncle.log', 'utf8');
+// Example: Upload log file (using relative or environment-based path)
+const logPath = process.env.LOG_FILE_PATH || './logs/carpuncle.log';
+const logContent = fs.readFileSync(logPath, 'utf8');
 await uploadToOneDrive('carpuncle.log', logContent, 'application-logs');
 ```
 
@@ -1029,9 +1029,9 @@ await provider.uploadFile('location', 'file.json', content);
 
 ## Additional Resources
 
-- [Microsoft Graph API Documentation](https://docs.microsoft.com/en-us/graph/)
-- [Upload files to SharePoint](https://docs.microsoft.com/en-us/graph/api/driveitem-put-content)
-- [Upload large files with upload session](https://docs.microsoft.com/en-us/graph/api/driveitem-createuploadsession)
-- [Microsoft Authentication Library (MSAL)](https://docs.microsoft.com/en-us/azure/active-directory/develop/msal-overview)
-- [Azure Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/)
-- [Best practices for Microsoft Graph](https://docs.microsoft.com/en-us/graph/best-practices-concept)
+- [Microsoft Graph API Documentation](https://learn.microsoft.com/en-us/graph/)
+- [Upload files to SharePoint](https://learn.microsoft.com/en-us/graph/api/driveitem-put-content)
+- [Upload large files with upload session](https://learn.microsoft.com/en-us/graph/api/driveitem-createuploadsession)
+- [Microsoft Authentication Library (MSAL)](https://learn.microsoft.com/en-us/azure/active-directory/develop/msal-overview)
+- [Azure Managed Identity](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/)
+- [Best practices for Microsoft Graph](https://learn.microsoft.com/en-us/graph/best-practices-concept)
